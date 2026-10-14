@@ -7,17 +7,16 @@ const TIMEOUT_MS = 10_000;
 
 /**
  * Distancia por carretera origen → destino, devuelta ya como km de ida y vuelta.
- * Usa Google Routes API si hay GOOGLE_MAPS_API_KEY; si no, OpenRouteService con OPENROUTESERVICE_API_KEY.
+ * Usa OpenRouteService (gratis, sin tarjeta) con OPENROUTESERVICE_API_KEY.
  */
 export async function roundTripDistance(origin: string, destination: string): Promise<DistanceResult> {
   if (!origin.trim()) return { ok: false, error: "Falta la dirección de origen en Ajustes." };
   if (!destination.trim()) return { ok: false, error: "Falta la dirección del cliente." };
 
   try {
-    let meters: number | null;
-    if (process.env.GOOGLE_MAPS_API_KEY) meters = await googleMeters(origin, destination, process.env.GOOGLE_MAPS_API_KEY);
-    else if (process.env.OPENROUTESERVICE_API_KEY) meters = await orsMeters(origin, destination, process.env.OPENROUTESERVICE_API_KEY);
-    else return { ok: false, error: "No hay clave de mapas configurada. Escribe los km a mano." };
+    const key = process.env.OPENROUTESERVICE_API_KEY;
+    if (!key) return { ok: false, error: "No hay clave de mapas configurada. Escribe los km a mano." };
+    const meters = await orsMeters(origin, destination, key);
 
     if (meters == null) return { ok: false, error: "No se ha encontrado ruta por carretera. Revisa las direcciones." };
     return { ok: true, roundTripKm: roundTripKm(meters) };
@@ -25,30 +24,6 @@ export async function roundTripDistance(origin: string, destination: string): Pr
     console.error("Error calculando distancia", e);
     return { ok: false, error: "No se ha podido calcular la distancia. Inténtalo más tarde o escribe los km a mano." };
   }
-}
-
-// Google Routes API (sustituye a Distance Matrix, que ya no se puede activar en proyectos nuevos).
-async function googleMeters(origin: string, destination: string, key: string): Promise<number | null> {
-  const res = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": key,
-      "X-Goog-FieldMask": "routes.distanceMeters",
-    },
-    body: JSON.stringify({
-      origin: { address: origin },
-      destination: { address: destination },
-      travelMode: "DRIVE",
-      languageCode: "es",
-      regionCode: "es",
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Google Routes ${res.status}: ${await res.text()}`);
-  const data = (await res.json()) as { routes?: { distanceMeters?: number }[] };
-  return data.routes?.[0]?.distanceMeters ?? null;
 }
 
 // OpenRouteService: geocodifica las dos direcciones y pide la ruta en coche.

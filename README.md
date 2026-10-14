@@ -14,19 +14,20 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 | 4 | Exportar Word con los tickets | ⏳ |
 | 5 | PWA y pulido | ⏳ |
 
+## Coste
+
+Todo funciona con planes gratuitos y sin tarjeta: Supabase *Free*, Vercel *Hobby* y OpenRouteService *Standard*.
+
 ## Variables de entorno
 
 | Variable | Dónde | Para qué |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | Conexión |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → *Publishable key* (`sb_publishable_…`) | Conexión (pública: los datos los protege RLS). También vale la antigua *anon key* en `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
-| `GOOGLE_MAPS_API_KEY` | Google Cloud → *Routes API* | Km ida y vuelta a cada cliente |
-| `OPENROUTESERVICE_API_KEY` | openrouteservice.org (opcional) | Alternativa gratuita si no hay clave de Google |
+| `OPENROUTESERVICE_API_KEY` | <https://openrouteservice.org/dev> (gratis, sin tarjeta) | Km ida y vuelta a cada cliente. Opcional: sin ella, los km se escriben a mano |
 
 Las variables sin `NEXT_PUBLIC_` solo se usan en el servidor y nunca llegan al navegador.
 No hace falta la *service role key*: la app trabaja siempre con la sesión del usuario.
-
-> Google ya no deja activar *Distance Matrix API* en proyectos nuevos; la app usa **Routes API**, que hace lo mismo con la misma clave. Si no hay clave, los km se escriben a mano.
 
 ## Puesta en marcha
 
@@ -43,11 +44,11 @@ No hace falta la *service role key*: la app trabaja siempre con la sesión del u
    npx supabase db push                                  # aplica supabase/migrations
    ```
 
-### 2. Google Maps (km)
+### 2. OpenRouteService (km, gratis)
 
-1. <https://console.cloud.google.com> → crea un proyecto → **APIs y servicios → Biblioteca** → activa **Routes API**.
-2. **Credenciales → Crear credenciales → Clave de API**. Restringe la clave a *Routes API*.
-3. Google pide una cuenta de facturación, pero el uso de esta app está muy por debajo del crédito gratuito mensual.
+1. <https://openrouteservice.org/dev/#/signup> → crea la cuenta (no pide tarjeta).
+2. **Dashboard → Tokens → Create token** (tipo *Standard*) y cópialo en `OPENROUTESERVICE_API_KEY`.
+3. El plan gratuito permite 2.000 rutas al día; la app solo calcula al crear un cliente o al pulsar *Recalcular*.
 
 ### 3. Vercel
 
