@@ -1,13 +1,13 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from "./env";
+import type { Database } from "./types";
 
-/** Cliente con la sesión del usuario (cookies). */
+/** Cliente con la sesión del usuario (cookies). Todas las consultas pasan por RLS. */
 export async function createSupabaseServer() {
   const cookieStore = await cookies();
-  return createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  return createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (toSet) => {
@@ -21,9 +21,4 @@ export async function createSupabaseServer() {
   });
 }
 
-/** Cliente con la clave secreta: solo para operaciones de administración (crear cuentas). */
-export function createSupabaseAdmin() {
-  return createClient(SUPABASE_URL, process.env.SUPABASE_SECRET_KEY!, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
+export type SupabaseServer = Awaited<ReturnType<typeof createSupabaseServer>>;

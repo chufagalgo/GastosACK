@@ -4,6 +4,14 @@ export interface FormState {
   error?: string;
   fieldErrors?: Record<string, string>;
   ok?: string;
+  /** Valores enviados: React vacía el formulario tras la acción y así se pueden restaurar. */
+  values?: Record<string, string>;
+}
+
+export function formValues(fd: FormData): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of fd) if (typeof v === "string" && !k.startsWith("$")) out[k] = v;
+  return out;
 }
 
 export function str(fd: FormData, name: string): string {

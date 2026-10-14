@@ -1,18 +1,22 @@
 // Utilidades de dinero. Todo se maneja en céntimos (enteros).
 
-/** 200 → "2 €", 250 → "2,50 €" */
+const eurFormat = new Intl.NumberFormat("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: "always" });
+
+/** 1234567 → "12.345,67 €" (siempre 2 decimales y coma decimal) */
 export function formatEuros(cents: number): string {
-  const sign = cents < 0 ? "-" : "";
-  const abs = Math.abs(cents);
-  const euros = Math.floor(abs / 100);
-  const rest = abs % 100;
-  const body = rest === 0 ? `${euros}` : `${euros},${String(rest).padStart(2, "0")}`;
-  return `${sign}${body} €`;
+  return `${eurFormat.format(cents / 100)} €`;
 }
 
-/** "2", "2,5", "2.50" → céntimos. Devuelve null si no es un importe válido. */
+/** 1250 → "12,50" (para rellenar inputs) */
+export function centsToInput(cents: number): string {
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
+
+/** "2", "2,5", "2.50", "1.234,56" → céntimos. Devuelve null si no es un importe válido. */
 export function parseEuros(input: string): number | null {
-  const normalized = input.trim().replace("€", "").trim().replace(",", ".");
-  if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return null;
-  return Math.round(Number(normalized) * 100);
+  let s = input.trim().replace("€", "").trim();
+  // Con coma decimal, los puntos son separadores de miles.
+  if (s.includes(",")) s = s.replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+  return Math.round(Number(s) * 100);
 }

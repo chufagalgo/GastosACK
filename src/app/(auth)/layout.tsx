@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           💶
         </div>
         <h1 className="mt-2 font-heading text-2xl font-bold">GASTOSACK</h1>
-        <p className="text-sm text-muted-foreground">Control de gastos</p>
+        <p className="text-sm text-muted-foreground">Liquidació de despeses · ACK Logic</p>
       </div>
       {children}
     </main>
