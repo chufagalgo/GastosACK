@@ -11,7 +11,7 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 | 1 | Clientes + km desde ACK Logic, Ajustes, login | ✅ |
 | 2 | Gastos con foto del ticket | ✅ |
 | 3 | Cierre de mes y exportar Excel (plantilla `templates/Gastos_Marzo.xlsx`) | ✅ |
-| 4 | Exportar Word con los tickets | ⏳ |
+| 4 | Exportar Word con los tickets | ✅ |
 | 5 | PWA y pulido | ⏳ |
 
 ## Coste
@@ -80,6 +80,14 @@ Entra con el usuario del paso 1.3 → **Ajustes**: comprueba tu nombre, la direc
 Para cambiar el formato basta con sustituir `templates/Gastos_Marzo.xlsx` (mismas posiciones de celdas).
 
 Los km se multiplican sin redondear en el Excel (`=F*E`, como en la plantilla); en la app cada desplazamiento se redondea al céntimo, así que el total puede diferir como mucho en algún céntimo.
+
+## Word con los tickets
+
+En **Cierre → Descargar Word con los tickets** se genera `Tickets_<Mes>_<Any>.docx` (en catalán):
+
+- Portada: *Liquidació despeses – Març 2026*, nombre, empresa y total del mes.
+- Tabla resumen de todos los gastos (incluidos los km): data, client, projecte, categoria, import.
+- Un bloque por ticket ordenado por fecha, dos por página, con el encabezado *Dia X – Client – Categoria – Import €* y la foto escalada sin deformarla (las fotos pequeñas no se agrandan). De los PDF se usa la imagen de la primera página.
 
 ## Desarrollo
 

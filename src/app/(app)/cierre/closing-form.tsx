@@ -12,10 +12,11 @@ import type { ClosingState } from "./actions";
 
 interface Props {
   closing: Closing;
+  word: { url: string; fileName: string };
   action: (prev: ClosingState, fd: FormData) => Promise<ClosingState>;
 }
 
-export function ClosingForm({ closing, action }: Props) {
+export function ClosingForm({ closing, word, action }: Props) {
   const [state, formAction, pending] = useActionState(action, {});
   const errors = state.fieldErrors ?? {};
   const v = state.values;
@@ -75,8 +76,10 @@ export function ClosingForm({ closing, action }: Props) {
         <Button type="submit" name="then" value="excel" size="lg" disabled={pending}>
           <FileSpreadsheet aria-hidden /> {pending ? "Preparando…" : "Guardar y descargar Excel"}
         </Button>
-        <Button type="button" size="lg" variant="outline" disabled title="Llega en la fase 4">
-          <FileText aria-hidden /> Word con los tickets (próximamente)
+        <Button asChild size="lg" variant="outline">
+          <a href={word.url} download={word.fileName}>
+            <FileText aria-hidden /> Descargar Word con los tickets
+          </a>
         </Button>
         <Button type="submit" variant="ghost" disabled={pending}>
           Solo guardar

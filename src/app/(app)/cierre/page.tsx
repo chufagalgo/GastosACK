@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { MonthPicker } from "@/components/month-picker";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { parseMonth, todayInSpain } from "@/lib/domain/dates";
+import { monthKey, parseMonth, todayInSpain } from "@/lib/domain/dates";
 import { excelFileName } from "@/lib/domain/excel-rows";
+import { wordFileName } from "@/lib/server/word";
 import { formatEuros } from "@/lib/domain/money";
 import { getClosing } from "@/lib/server/closing";
 import { listMonthExpenses } from "@/lib/server/expenses";
@@ -30,7 +31,12 @@ export default async function ClosingPage({ searchParams }: PageProps<"/cierre">
           <Row label="Total a pagar" value={formatEuros(total - advances)} strong />
         </CardContent>
       </Card>
-      <ClosingForm key={`${year}-${month}`} closing={closing} action={saveClosingAction.bind(null, year, month)} />
+      <ClosingForm
+        key={`${year}-${month}`}
+        closing={closing}
+        word={{ url: `/api/export/word/${monthKey(year, month)}`, fileName: wordFileName(year, month) }}
+        action={saveClosingAction.bind(null, year, month)}
+      />
     </>
   );
 }
