@@ -42,8 +42,8 @@ No hace falta la *service role key*: la app trabaja siempre con la sesión del u
 
 ### 2. OpenRouteService (km, gratis)
 
-1. <https://openrouteservice.org/dev/#/signup> → crea la cuenta (no pide tarjeta).
-2. **Dashboard → Tokens → Create token** (tipo *Standard*) y cópialo en `OPENROUTESERVICE_API_KEY`.
+1. <https://openrouteservice.org/dev/#/signup> → crea la cuenta (no pide tarjeta). La app usa la dirección nueva de la API, `api.heigit.org` (la antigua `api.openrouteservice.org` está retirada).
+2. En el panel copia la **Basic Key** (botón de copiar junto a la clave) y ponla en Vercel como `OPENROUTESERVICE_API_KEY`.
 3. El plan gratuito permite 2.000 rutas al día; la app solo calcula al crear un cliente o al pulsar *Recalcular*.
 
 ### 3. Vercel
