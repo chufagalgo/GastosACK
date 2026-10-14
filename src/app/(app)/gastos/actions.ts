@@ -9,22 +9,10 @@ import { parseEuros } from "@/lib/domain/money";
 import { formValues, str, type FormState } from "@/lib/forms";
 import { getProfile, requireSession } from "@/lib/server/auth";
 import { distanceFromOrigin, getClient } from "@/lib/server/clients";
-import { downloadReceipt, getExpense, isOwnPath, removeReceipts } from "@/lib/server/expenses";
-import { readReceipt, type ReceiptData, type ReceiptFile } from "@/lib/server/ocr";
+import { getExpense, isOwnPath, removeReceipts } from "@/lib/server/expenses";
 import type { Client, Expense } from "@/lib/supabase/types";
 
-// ─────────────────────────── Lectura del ticket ───────────────────────────
-
-export async function analyzeReceiptAction(
-  path: string,
-  mediaType: ReceiptFile["mediaType"],
-): Promise<{ ok: true; data: ReceiptData; raw: unknown } | { ok: false; error: string }> {
-  const { userId } = await requireSession();
-  if (!isOwnPath(userId, path)) return { ok: false, error: "Fichero no válido." };
-  const data = await downloadReceipt(path);
-  if (!data) return { ok: false, error: "No se ha encontrado la foto subida." };
-  return readReceipt({ data, mediaType });
-}
+// ─────────────────────────── Fotos ───────────────────────────
 
 /** Borra las fotos subidas de un ticket que no se llega a guardar. */
 export async function discardUploadAction(paths: string[]): Promise<void> {
@@ -135,12 +123,7 @@ export async function createExpenseAction(kind: Kind, _prev: FormState, fd: Form
   const parsed = await parseExpenseForm(fd, kind, null);
   if ("errors" in parsed) return { fieldErrors: parsed.errors, error: parsed.errors._, values: formValues(fd) };
 
-  let aiRaw: unknown = null;
-  try {
-    aiRaw = str(fd, "ai_raw") ? JSON.parse(str(fd, "ai_raw")) : null;
-  } catch {}
-
-  const { error } = await supabase.from("expenses").insert({ ...parsed.row, ai_raw: aiRaw as never });
+  const { error } = await supabase.from("expenses").insert(parsed.row);
   if (error) {
     console.error("Error guardando gasto", error);
     return { error: "No se ha podido guardar el gasto.", values: formValues(fd) };

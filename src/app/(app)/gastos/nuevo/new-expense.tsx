@@ -5,10 +5,9 @@ import { Camera, Car, FileImage, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { compressImage, pdfFirstPageToJpeg } from "@/lib/client/image";
-import { centsToInput } from "@/lib/domain/money";
 import type { Client } from "@/lib/supabase/types";
 import { getSupabaseBrowser } from "@/lib/supabase/client";
-import { analyzeReceiptAction, createExpenseAction, discardUploadAction } from "../actions";
+import { createExpenseAction, discardUploadAction } from "../actions";
 import { EMPTY_VALUES, ExpenseForm, type ExpenseFormValues } from "../expense-form";
 
 interface Props {
@@ -18,16 +17,15 @@ interface Props {
   clients: Client[];
   projects: { project: string; client_id: string | null }[];
   rate: number;
-  aiEnabled: boolean;
 }
 
 type Step =
   | { name: "pick" }
   | { name: "working"; label: string; preview?: string }
-  | { name: "ticket"; preview: string; path: string; imagePath: string | null; values: ExpenseFormValues; aiRaw: unknown; notice?: string }
+  | { name: "ticket"; preview: string; path: string; imagePath: string | null; values: ExpenseFormValues }
   | { name: "km" };
 
-export function NewExpense({ userId, month, defaultDate, clients, projects, rate, aiEnabled }: Props) {
+export function NewExpense({ userId, month, defaultDate, clients, projects, rate }: Props) {
   const [step, setStep] = useState<Step>({ name: "pick" });
   const cameraRef = useRef<HTMLInputElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -61,26 +59,7 @@ export function NewExpense({ userId, month, defaultDate, clients, projects, rate
       }
 
       const values = { ...EMPTY_VALUES, date: defaultDate };
-      let aiRaw: unknown = null;
-      let notice: string | undefined;
-      if (aiEnabled) {
-        setStep({ name: "working", label: "Leyendo el ticket…", preview });
-        // Los PDF se leen enteros (más texto fiable); las fotos, ya comprimidas.
-        const r = await analyzeReceiptAction(path, isPdf ? "application/pdf" : "image/jpeg");
-        if (r.ok) {
-          aiRaw = r.raw;
-          if (r.data.date) values.date = r.data.date;
-          if (r.data.total_amount != null) values.amount = centsToInput(Math.round(r.data.total_amount * 100));
-          values.vendor_name = r.data.vendor_name ?? "";
-          values.vendor_tax_id = r.data.tax_id ?? "";
-          values.category = r.data.category;
-        } else {
-          notice = r.error;
-        }
-      } else {
-        notice = "La lectura automática no está configurada: rellena los datos a mano.";
-      }
-      setStep({ name: "ticket", preview, path, imagePath: isPdf ? imagePath : null, values, aiRaw, notice });
+      setStep({ name: "ticket", preview, path, imagePath: isPdf ? imagePath : null, values });
     } catch (e) {
       console.error(e);
       toast.error("No se ha podido subir el ticket. Inténtalo de nuevo.");
@@ -158,12 +137,8 @@ export function NewExpense({ userId, month, defaultDate, clients, projects, rate
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={step.preview} alt="Ticket" className="h-32 w-24 shrink-0 rounded-lg border bg-background object-contain" />
         <div className="flex-1 text-sm">
-          <p className="font-medium">Revisa los datos antes de guardar</p>
-          {step.notice ? (
-            <p className="mt-1 text-amber-700 dark:text-amber-400">{step.notice}</p>
-          ) : (
-            <p className="mt-1 text-muted-foreground">Rellenados a partir del ticket. Corrige lo que haga falta.</p>
-          )}
+          <p className="font-medium">Ticket subido</p>
+          <p className="mt-1 text-muted-foreground">Rellena los datos del ticket y guarda.</p>
           <Button variant="ghost" size="sm" className="mt-2 -ml-2 text-destructive" onClick={discard}>
             <X aria-hidden /> Descartar
           </Button>
@@ -178,7 +153,7 @@ export function NewExpense({ userId, month, defaultDate, clients, projects, rate
         rate={rate}
         action={createExpenseAction.bind(null, "ticket")}
         isNew
-        receipt={{ path: step.path, imagePath: step.imagePath, aiRaw: step.aiRaw }}
+        receipt={{ path: step.path, imagePath: step.imagePath }}
       />
     </>
   );

@@ -41,7 +41,7 @@ interface Props {
   rate: number;
   action: (prev: FormState, fd: FormData) => Promise<FormState>;
   isNew: boolean;
-  receipt?: { path: string; imagePath: string | null; aiRaw: unknown };
+  receipt?: { path: string; imagePath: string | null };
   submitLabel?: string;
 }
 
@@ -88,7 +88,6 @@ export function ExpenseForm({ kind, month: initialMonth, initial, clients: initi
         <>
           <input type="hidden" name="receipt_path" value={receipt.path} />
           <input type="hidden" name="receipt_image_path" value={receipt.imagePath ?? ""} />
-          <input type="hidden" name="ai_raw" value={receipt.aiRaw ? JSON.stringify(receipt.aiRaw) : ""} />
         </>
       )}
 

@@ -5,7 +5,6 @@ import { monthKey, monthLabel, parseMonth, todayInSpain } from "@/lib/domain/dat
 import { getProfile, requireSession } from "@/lib/server/auth";
 import { listClients } from "@/lib/server/clients";
 import { recentProjects } from "@/lib/server/expenses";
-import { isReceiptReaderConfigured } from "@/lib/server/ocr";
 import { NewExpense } from "./new-expense";
 
 export const metadata: Metadata = { title: "Nuevo gasto" };
@@ -31,7 +30,6 @@ export default async function NewExpensePage({ searchParams }: PageProps<"/gasto
         clients={clients}
         projects={projects}
         rate={profile.km_rate}
-        aiEnabled={isReceiptReaderConfigured()}
       />
     </>
   );
