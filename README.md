@@ -10,7 +10,7 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 |---|---|---|
 | 1 | Clientes + km desde ACK Logic, Ajustes, login | ✅ |
 | 2 | Gastos con foto del ticket | ✅ |
-| 3 | Exportar Excel (plantilla `templates/Gastos_Marzo.xlsx`) | ⏳ |
+| 3 | Cierre de mes y exportar Excel (plantilla `templates/Gastos_Marzo.xlsx`) | ✅ |
 | 4 | Exportar Word con los tickets | ⏳ |
 | 5 | PWA y pulido | ⏳ |
 
@@ -67,6 +67,20 @@ Entra con el usuario del paso 1.3 → **Ajustes**: comprueba tu nombre, la direc
    - La fecha tiene que caer en el mes en el que estás; si el ticket es de otro mes, la app te ofrece guardarlo allí.
 4. *Solo kilometraje*: para días sin ticket. Los km salen del cliente y se pueden cambiar; importe = km × €/km.
 
+## Cierre de mes y Excel
+
+**Cierre** (o el botón *Cierre* de Inicio): anticipos (*Bestretes a compte*, hasta 4 con fecha e importe), *Hores imputades ITM* y *Control horari*. **Guardar y descargar Excel** genera `Gastos_<Mes>_<Any>.xlsx` a partir de `templates/Gastos_Marzo.xlsx`:
+
+- B3 empresa, B4 nombre, K4 mes en catalán, M4 año.
+- Filas 9–39 = días 1–31: A día · B cliente · C proyecto · D lloc · E km · F €/km · G `=F*E` · H–L Autopistes/Dietes/Allotjaments/Bitllets/Altres · M total del día.
+- Varios tickets de la misma columna un mismo día → fórmula suma (`=12.82+2+6.5`); varios km → `=40+12.5`; varios clientes → unidos con ` / `.
+- Días que no existen en el mes: fila vacía. Las celdas P8:Q13 (cálculos antiguos) se vacían.
+- Anticipos en A44:B47; M42/M43 `si`/`no`; M44–M46 conservan sus fórmulas y Excel lo recalcula todo al abrir.
+
+Para cambiar el formato basta con sustituir `templates/Gastos_Marzo.xlsx` (mismas posiciones de celdas).
+
+Los km se multiplican sin redondear en el Excel (`=F*E`, como en la plantilla); en la app cada desplazamiento se redondea al céntimo, así que el total puede diferir como mucho en algún céntimo.
+
 ## Desarrollo
 
 Requiere Docker para el Supabase local.
@@ -76,7 +90,7 @@ npm install
 npx supabase start            # Supabase local (aplica las migraciones)
 cp .env.example .env.local    # pon la URL y la clave publishable que muestra el comando anterior
 npm run dev                   # http://localhost:3000
-npm test                      # tests de lógica
+npm test                      # tests de lógica y del Excel (compara con la plantilla; con LibreOffice instalado también recalcula los totales)
 npm run typecheck && npm run lint
 npm run db:types              # regenerar tipos tras cambiar el esquema
 ```

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Home, Settings } from "lucide-react";
+import { Building2, FileSpreadsheet, Home, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/", label: "Inicio", icon: Home },
+  { href: "/cierre", label: "Cierre", icon: FileSpreadsheet },
   { href: "/clientes", label: "Clientes", icon: Building2 },
   { href: "/ajustes", label: "Ajustes", icon: Settings },
 ];

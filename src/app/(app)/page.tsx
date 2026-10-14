@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, FileSpreadsheet, Plus } from "lucide-react";
 import { MonthPicker } from "@/components/month-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,11 +51,18 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         </CardContent>
       </Card>
 
-      <Button asChild size="lg" className="mb-5 h-14 w-full text-base">
-        <Link href={`/gastos/nuevo?mes=${key}`}>
-          <Plus className="size-5" aria-hidden /> Nuevo gasto
-        </Link>
-      </Button>
+      <div className="mb-5 grid grid-cols-[1fr_auto] gap-2">
+        <Button asChild size="lg" className="h-14 text-base">
+          <Link href={`/gastos/nuevo?mes=${key}`}>
+            <Plus className="size-5" aria-hidden /> Nuevo gasto
+          </Link>
+        </Button>
+        <Button asChild size="lg" variant="outline" className="h-14">
+          <Link href={`/cierre?mes=${key}`}>
+            <FileSpreadsheet className="size-5" aria-hidden /> Cierre
+          </Link>
+        </Button>
+      </div>
 
       {byDay.size === 0 ? (
         <p className="py-8 text-center text-sm text-muted-foreground">No hay gastos este mes.</p>
