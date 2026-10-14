@@ -79,3 +79,41 @@ export async function removeReceipts(paths: (string | null | undefined)[]): Prom
   const own = paths.filter((p): p is string => isOwnPath(userId, p));
   if (own.length) await supabase.storage.from(BUCKET).remove(own);
 }
+
+/**
+ * Borra las fotos de la carpeta del usuario que no pertenecen a ningún gasto
+ * (subidas y abandonadas sin guardar). Respeta las de las últimas 24 h por si hay un alta a medias.
+ */
+export async function removeOrphanReceipts(): Promise<number> {
+  const { supabase, userId } = await requireSession();
+  const files: { path: string; createdAt: string | null }[] = [];
+
+  // Estructura: <user>/<año>/<mes>/<fichero>. Las carpetas vienen con id null.
+  async function walk(prefix: string, depth: number) {
+    const { data, error } = await supabase.storage.from(BUCKET).list(prefix, { limit: 1000 });
+    if (error || !data) return;
+    for (const item of data) {
+      const path = `${prefix}/${item.name}`;
+      if (item.id == null && depth < 3) await walk(path, depth + 1);
+      else if (item.id != null) files.push({ path, createdAt: item.created_at });
+    }
+  }
+  await walk(userId, 1);
+  if (!files.length) return 0;
+
+  const used = new Set<string>();
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase.from("expenses").select("receipt_path, receipt_image_path").range(from, from + 999);
+    if (error) throw error;
+    for (const r of data) {
+      if (r.receipt_path) used.add(r.receipt_path);
+      if (r.receipt_image_path) used.add(r.receipt_image_path);
+    }
+    if (data.length < 1000) break;
+  }
+
+  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+  const orphans = files.filter((f) => !used.has(f.path) && (!f.createdAt || Date.parse(f.createdAt) < dayAgo)).map((f) => f.path);
+  for (let i = 0; i < orphans.length; i += 100) await supabase.storage.from(BUCKET).remove(orphans.slice(i, i + 100));
+  return orphans.length;
+}

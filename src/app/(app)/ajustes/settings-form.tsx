@@ -1,14 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useTransition } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Field } from "@/components/form/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { FormState } from "@/lib/forms";
 import type { Profile } from "@/lib/supabase/types";
-import { recalculateAll, saveSettings } from "./actions";
+import { cleanOrphansAction, recalculateAll, saveSettings } from "./actions";
 
 export function SettingsForm({ profile }: { profile: Profile }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveSettings, {});
@@ -68,6 +68,26 @@ export function RecalculateAllButton() {
     >
       <RefreshCw className={pending ? "animate-spin" : undefined} aria-hidden />
       {pending ? "Recalculando…" : "Recalcular km de todos los clientes"}
+    </Button>
+  );
+}
+
+export function CleanOrphansButton() {
+  const [pending, startTransition] = useTransition();
+  return (
+    <Button
+      variant="outline"
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          const res = await cleanOrphansAction();
+          if (res.error) toast.error(res.error);
+          else toast.success(res.ok);
+        })
+      }
+    >
+      <Trash2 aria-hidden />
+      {pending ? "Limpiando…" : "Borrar fotos sin usar"}
     </Button>
   );
 }

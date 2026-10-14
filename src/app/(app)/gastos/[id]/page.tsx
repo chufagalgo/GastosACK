@@ -13,6 +13,7 @@ import { getExpense, recentProjects, signedReceiptUrl } from "@/lib/server/expen
 import { updateExpenseAction } from "../actions";
 import { ExpenseForm } from "../expense-form";
 import { DeleteExpense } from "./delete-expense";
+import { RepeatKm } from "./repeat-km";
 
 export const metadata: Metadata = { title: "Gasto" };
 
@@ -73,8 +74,21 @@ export default async function ExpensePage({ params }: PageProps<"/gastos/[id]">)
         isNew={false}
         submitLabel="Guardar cambios"
       />
+      {isKm && (
+        <>
+          <Separator className="my-6" />
+          <RepeatKm id={expense.id} defaultDate={nextDay(expense.date)} />
+        </>
+      )}
       <Separator className="my-6" />
       <DeleteExpense id={expense.id} />
     </>
   );
+}
+
+/** Día siguiente (lo más habitual al repetir una visita). */
+function nextDay(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
 }

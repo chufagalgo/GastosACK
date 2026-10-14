@@ -98,6 +98,13 @@ En **Cierre → Descargar Word con los tickets** se genera `Tickets_<Mes>_<Any>.
 - Tabla resumen de todos los gastos (incluidos los km): data, client, projecte, categoria, import.
 - Un bloque por ticket ordenado por fecha, dos por página, con el encabezado *Dia X – Client – Categoria – Import €* y la foto escalada sin deformarla (las fotos pequeñas no se agrandan). De los PDF se usa la imagen de la primera página.
 
+## Extras
+
+- **Repetir un desplazamiento:** en un gasto de km → *Repetir este desplazamiento* → elige el día → *Copiar*. No duplica si ese día ya tiene km a ese cliente.
+- **Copia de seguridad:** *Ajustes → Descargar copia de seguridad (CSV)*: todos los gastos en un fichero que abre Excel.
+- **Borrar fotos sin usar:** *Ajustes*: elimina las fotos subidas que no llegaron a guardarse en un gasto (respeta las de las últimas 24 h).
+- **Supabase siempre despierto:** Vercel llama cada día a `/api/keepalive` (ver `vercel.json`), así el plan gratuito no se pausa por inactividad. Responde sin datos: sin sesión, RLS devuelve una lista vacía.
+
 ## Desarrollo
 
 Requiere Docker para el Supabase local.
@@ -124,4 +131,4 @@ SUPABASE_TEST_URL=http://127.0.0.1:54321 SUPABASE_TEST_ANON_KEY=<anon key> npm t
 - Cada gasto de km guarda la tarifa del momento: cambiarla en Ajustes no altera meses ya registrados.
 - Los clientes con gastos no se borran: se archivan.
 - Todas las tablas y el bucket `receipts` tienen RLS: cada usuario solo ve sus datos.
-- El plan Free de Supabase pausa el proyecto tras 7 días sin actividad; se reactiva desde el panel.
+- El plan Free de Supabase pausa el proyecto tras 7 días sin actividad; el keepalive diario lo evita. Si aun así se pausara, se reactiva desde el panel.

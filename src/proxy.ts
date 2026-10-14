@@ -34,7 +34,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Todo menos estáticos, iconos, manifest y service worker.
-    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw.js|.*\\.(?:png|svg|jpg|ico)$).*)",
+    // Todo menos estáticos, iconos, manifest, service worker y el keepalive diario.
+    "/((?!_next/static|_next/image|favicon.ico|icons/|manifest.webmanifest|sw.js|api/keepalive|.*\\.(?:png|svg|jpg|ico)$).*)",
   ],
 };

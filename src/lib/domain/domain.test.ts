@@ -64,3 +64,13 @@ describe("dates", () => {
     expect(end.toISOString()).toBe("2027-01-01T00:00:00.000Z");
   });
 });
+
+describe("csv", async () => {
+  const { csvCell, toCsv } = await import("./csv");
+  it("escapa y usa coma decimal", () => {
+    expect(csvCell(12.82)).toBe("12,82");
+    expect(csvCell('Bar "Pepe"; Rubí')).toBe('"Bar ""Pepe""; Rubí"');
+    expect(csvCell(null)).toBe("");
+    expect(toCsv([["a", 1.5], ["b", null]])).toBe("﻿a;1,5\r\nb;\r\n");
+  });
+});

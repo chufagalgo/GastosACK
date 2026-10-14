@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { LogOut } from "lucide-react";
+import { Download, LogOut } from "lucide-react";
 import { logout } from "@/app/(auth)/actions";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { getProfile, requireSession } from "@/lib/server/auth";
-import { RecalculateAllButton, SettingsForm } from "./settings-form";
+import { CleanOrphansButton, RecalculateAllButton, SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Ajustes" };
 
@@ -21,6 +21,23 @@ export default async function SettingsPage() {
           Si cambias la dirección de origen, recalcula los km de los clientes (no afecta a los gastos ya guardados).
         </p>
         <RecalculateAllButton />
+      </div>
+      <Separator className="my-6" />
+      <div className="grid gap-2">
+        <p className="text-sm font-medium">Tus datos</p>
+        <p className="text-sm text-muted-foreground">
+          Copia de todos tus gastos en un fichero que se abre con Excel. Guárdala de vez en cuando por seguridad.
+        </p>
+        <Button asChild variant="outline">
+          <a href="/api/export/csv" download>
+            <Download aria-hidden /> Descargar copia de seguridad (CSV)
+          </a>
+        </Button>
+        <CleanOrphansButton />
+        <p className="text-xs text-muted-foreground">Borra las fotos que se subieron pero no llegaron a guardarse en ningún gasto.</p>
+      </div>
+      <Separator className="my-6" />
+      <div className="grid gap-2">
         <form action={logout}>
           <Button type="submit" variant="ghost" className="w-full text-destructive">
             <LogOut aria-hidden /> Cerrar sesión

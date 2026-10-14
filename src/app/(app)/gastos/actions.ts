@@ -180,3 +180,36 @@ export async function deleteExpenseAction(id: string): Promise<FormState> {
   revalidatePath("/");
   backToMonth(existing.date);
 }
+
+/** Copia un desplazamiento (mismo cliente, proyecto, lloc, km y tarifa) a otro día. */
+export async function repeatKmAction(id: string, date: string): Promise<FormState> {
+  const { supabase } = await requireSession();
+  const source = await getExpense(id);
+  if (!source || source.category !== "km" || !source.client_id) return { error: "Solo se pueden repetir desplazamientos." };
+  if (!parseDateOnly(date)) return { error: "Fecha no válida." };
+  if (date > todayInSpain()) return { error: "La fecha no puede ser futura." };
+
+  const { count } = await supabase
+    .from("expenses")
+    .select("id", { count: "exact", head: true })
+    .eq("date", date)
+    .eq("category", "km")
+    .eq("client_id", source.client_id);
+  if (count) return { error: "Ese día ya tiene un desplazamiento a este cliente." };
+
+  const { error } = await supabase.from("expenses").insert({
+    date,
+    category: "km",
+    client_id: source.client_id,
+    project: source.project,
+    place: source.place,
+    km: source.km,
+    km_rate: source.km_rate,
+    amount_cents: source.amount_cents,
+    notes: source.notes,
+  });
+  if (error) return { error: "No se ha podido copiar el desplazamiento." };
+  revalidatePath("/");
+  const [y, m, d] = date.split("-");
+  return { ok: `Copiado al ${Number(d)}/${Number(m)}/${y}` };
+}

@@ -6,6 +6,7 @@ import { parseRate } from "@/lib/domain/km";
 import { fieldErrors, formValues, str, type FormState } from "@/lib/forms";
 import { requireSession } from "@/lib/server/auth";
 import { recalculateAllClients } from "@/lib/server/clients";
+import { removeOrphanReceipts } from "@/lib/server/expenses";
 
 const settingsSchema = z.object({
   full_name: z.string().min(1, "Escribe tu nombre").max(100),
@@ -38,4 +39,9 @@ export async function recalculateAll(): Promise<FormState> {
   if (result.error) return { error: result.error };
   const msg = `${result.updated} cliente(s) actualizados`;
   return result.failed.length ? { error: `${msg}. Sin calcular: ${result.failed.join(", ")}` } : { ok: msg };
+}
+
+export async function cleanOrphansAction(): Promise<FormState> {
+  const removed = await removeOrphanReceipts();
+  return { ok: removed ? `${removed} foto(s) sin usar borradas` : "No había fotos sin usar" };
 }
