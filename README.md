@@ -36,13 +36,9 @@ No hace falta la *service role key*: la app trabaja siempre con la sesión del u
 1. <https://supabase.com> → **New project** (`gastosack`, región *West EU* o *Central EU*, plan Free).
 2. **Authentication → Sign In / Providers**: desactiva **Allow new users to sign up**.
 3. **Authentication → Users → Add user → Create new user**: tu email y contraseña, marcando *Auto Confirm User*.
-4. Crea las tablas, la seguridad y el bucket de fotos desde tu ordenador:
+4. Crea las tablas, la seguridad y el bucket de fotos: **SQL Editor → New query**, pega el contenido de [`supabase/setup.sql`](supabase/setup.sql) y pulsa **Run** (una sola vez).
 
-   ```bash
-   npx supabase login
-   npx supabase link --project-ref <ref-del-proyecto>   # el ref está en la URL del panel
-   npx supabase db push                                  # aplica supabase/migrations
-   ```
+   Alternativa desde tu ordenador: `npx supabase login && npx supabase link --project-ref <ref> && npx supabase db push`.
 
 ### 2. OpenRouteService (km, gratis)
 
@@ -55,7 +51,7 @@ No hace falta la *service role key*: la app trabaja siempre con la sesión del u
 1. <https://vercel.com> → **Add New… → Project** → importa `gastosack`.
 2. Pega las variables de entorno de la tabla de arriba → **Deploy**.
 
-Cada push a `main` se publica solo. Si cambia el esquema, vuelve a ejecutar `npx supabase db push`.
+Cada push a `main` se publica solo. Si cambia el esquema, vuelve a ejecutar `npx supabase db push` (o pega en el SQL Editor la migración nueva).
 
 ### 4. Primer uso
 
