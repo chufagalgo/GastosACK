@@ -22,3 +22,10 @@ export async function getClosing(year: number, month: number): Promise<Closing> 
     advances: advances.data,
   };
 }
+
+export async function listYearAdvances(year: number): Promise<{ month: number; amount_cents: number }[]> {
+  const { supabase } = await requireSession();
+  const { data, error } = await supabase.from("advances").select("month, amount_cents").eq("year", year);
+  if (error) throw error;
+  return data;
+}

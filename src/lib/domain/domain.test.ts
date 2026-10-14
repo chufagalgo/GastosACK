@@ -74,3 +74,30 @@ describe("csv", async () => {
     expect(toCsv([["a", 1.5], ["b", null]])).toBe("﻿a;1,5\r\nb;\r\n");
   });
 });
+
+describe("resumen anual", async () => {
+  const { buildYearSummary } = await import("./summary");
+  it("suma por mes, tipo y cliente", () => {
+    const s = buildYearSummary(
+      [
+        { date: "2026-03-02", category: "km", client_name: "Reig Jofre", km: 57.8, amount_cents: 636 },
+        { date: "2026-03-02", category: "dietes", client_name: "Reig Jofre", km: null, amount_cents: 1282 },
+        { date: "2026-03-30", category: "km", client_name: "Reig Jofre", km: 57.8, amount_cents: 636 },
+        { date: "2026-05-10", category: "altres", client_name: null, km: null, amount_cents: 500 },
+        { date: "2026-05-11", category: "km", client_name: "Rubí", km: 21.2, amount_cents: 233 },
+      ],
+      [{ month: 3, amount_cents: 1000 }],
+    );
+    expect(s.months).toHaveLength(12);
+    expect(s.months[2]).toMatchObject({ total: 2554, advances: 1000, km: 115.6, count: 3 });
+    expect(s.months[3].total).toBe(0);
+    expect(s.total).toBe(3287);
+    expect(s.advances).toBe(1000);
+    expect(s.km).toBe(136.8);
+    expect(s.byCategory).toMatchObject({ km: 1505, dietes: 1282, altres: 500, autopistes: 0 });
+    expect(s.byClient).toEqual([
+      { name: "Reig Jofre", total: 2554, km: 115.6, days: 2 },
+      { name: "Rubí", total: 233, km: 21.2, days: 1 },
+    ]);
+  });
+});

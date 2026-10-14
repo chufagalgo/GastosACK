@@ -117,3 +117,21 @@ export async function removeOrphanReceipts(): Promise<number> {
   for (let i = 0; i < orphans.length; i += 100) await supabase.storage.from(BUCKET).remove(orphans.slice(i, i + 100));
   return orphans.length;
 }
+
+/** Todos los gastos de un año (paginado: PostgREST devuelve como mucho 1000 filas). */
+export async function listYearExpenses(year: number): Promise<ExpenseWithClient[]> {
+  const { supabase } = await requireSession();
+  const out: ExpenseWithClient[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("expenses")
+      .select("*, client:clients(name, town)")
+      .gte("date", `${year}-01-01`)
+      .lte("date", `${year}-12-31`)
+      .order("date")
+      .range(from, from + 999);
+    if (error) throw error;
+    out.push(...data.map(normalize));
+    if (data.length < 1000) return out;
+  }
+}

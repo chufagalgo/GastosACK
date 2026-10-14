@@ -100,6 +100,8 @@ En **Cierre → Descargar Word con los tickets** se genera `Tickets_<Mes>_<Any>.
 
 ## Extras
 
+- **Resumen del año** (menú *Resumen*): total del año, km, anticipos y pendiente de cobro; gráfica del total de cada mes (al tocar una barra se ve el importe y se puede ir a ese mes); reparto por tipo de gasto y por cliente; tabla mes a mes con todas las columnas.
+
 - **Repetir un desplazamiento:** en un gasto de km → *Repetir este desplazamiento* → elige el día → *Copiar*. No duplica si ese día ya tiene km a ese cliente.
 - **Copia de seguridad:** *Ajustes → Descargar copia de seguridad (CSV)*: todos los gastos en un fichero que abre Excel.
 - **Borrar fotos sin usar:** *Ajustes*: elimina las fotos subidas que no llegaron a guardarse en un gasto (respeta las de las últimas 24 h).
