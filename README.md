@@ -12,7 +12,7 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 | 2 | Gastos con foto del ticket | ✅ |
 | 3 | Cierre de mes y exportar Excel (plantilla `templates/Gastos_Marzo.xlsx`) | ✅ |
 | 4 | Exportar Word con los tickets | ✅ |
-| 5 | PWA y pulido | ⏳ |
+| 5 | PWA y pulido | ✅ |
 
 ## Coste
 
@@ -56,6 +56,15 @@ Cada push a `main` se publica solo. Si cambia el esquema, vuelve a ejecutar `npx
 ### 4. Primer uso
 
 Entra con el usuario del paso 1.3 → **Ajustes**: comprueba tu nombre, la dirección de origen (por defecto Carrer dels Argenters 2, Cerdanyola del Vallès) y la tarifa €/km → **Clientes**: da de alta los clientes (los km se calculan solos).
+
+## Instalar en el móvil
+
+Abre la dirección de Vercel en el móvil y entra con tu usuario:
+
+- **iPhone (Safari):** botón Compartir → **Añadir a pantalla de inicio**.
+- **Android (Chrome):** menú ⋮ → **Instalar aplicación** (o **Añadir a pantalla de inicio**).
+
+Se abre a pantalla completa como una app, con su icono. Manteniendo pulsado el icono (Android) hay accesos directos a *Nuevo gasto* y *Cierre de mes*. Sin cobertura muestra un aviso en lugar del error del navegador; los datos siempre se leen de internet para que estén al día.
 
 ## Cómo se registra un gasto
 

@@ -8,7 +8,7 @@ const geist = Geist({ variable: "--font-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: { default: "GASTOSACK", template: "%s · GASTOSACK" },
-  description: "Control de gastos",
+  description: "Gastos de empresa y liquidación mensual de ACK Logic",
   applicationName: "GASTOSACK",
   appleWebApp: { capable: true, title: "GASTOSACK", statusBarStyle: "default" },
   icons: {
