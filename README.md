@@ -9,7 +9,7 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1 | Clientes + km desde ACK Logic, Ajustes, login | ✅ |
-| 2 | Gastos + foto + lectura con IA | ⏳ |
+| 2 | Gastos + foto + lectura con IA | ✅ |
 | 3 | Exportar Excel (plantilla `templates/Gastos_Marzo.xlsx`) | ⏳ |
 | 4 | Exportar Word con los tickets | ⏳ |
 | 5 | PWA y pulido | ⏳ |
@@ -19,10 +19,10 @@ App web (PWA, mobile-first) para registrar los gastos de empresa de ACK Logic y 
 | Variable | Dónde | Para qué |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API | Conexión |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Ídem, clave *anon* | Conexión (pública: los datos los protege RLS) |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys → *Publishable key* (`sb_publishable_…`) | Conexión (pública: los datos los protege RLS). También vale la antigua *anon key* en `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 | `GOOGLE_MAPS_API_KEY` | Google Cloud → *Routes API* | Km ida y vuelta a cada cliente |
 | `OPENROUTESERVICE_API_KEY` | openrouteservice.org (opcional) | Alternativa gratuita si no hay clave de Google |
-| `ANTHROPIC_API_KEY` | console.anthropic.com | Leer los tickets (fase 2) |
+| `ANTHROPIC_API_KEY` | <https://console.anthropic.com> → *API Keys* → *Create Key* (`sk-ant-…`) | Leer los tickets. Sin ella, los datos se escriben a mano |
 
 Las variables sin `NEXT_PUBLIC_` solo se usan en el servidor y nunca llegan al navegador.
 No hace falta la *service role key*: la app trabaja siempre con la sesión del usuario.
@@ -50,16 +50,32 @@ No hace falta la *service role key*: la app trabaja siempre con la sesión del u
 2. **Credenciales → Crear credenciales → Clave de API**. Restringe la clave a *Routes API*.
 3. Google pide una cuenta de facturación, pero el uso de esta app está muy por debajo del crédito gratuito mensual.
 
-### 3. Vercel
+### 3. Anthropic (lectura de tickets)
+
+1. <https://console.anthropic.com> → crea la cuenta y añade saldo en **Billing** (cada ticket cuesta céntimos).
+2. **API Keys → Create Key** → cópiala en Vercel como `ANTHROPIC_API_KEY`. Es secreta: no la pegues en chats ni en el código.
+
+### 4. Vercel
 
 1. <https://vercel.com> → **Add New… → Project** → importa `gastosack`.
 2. Pega las variables de entorno de la tabla de arriba → **Deploy**.
 
 Cada push a `main` se publica solo. Si cambia el esquema, vuelve a ejecutar `npx supabase db push`.
 
-### 4. Primer uso
+### 5. Primer uso
 
-Entra con el usuario del paso 1.3 → **Ajustes**: tu nombre, la dirección de la oficina de ACK Logic y la tarifa €/km → **Clientes**: da de alta los clientes (los km se calculan solos).
+Entra con el usuario del paso 1.3 → **Ajustes**: comprueba tu nombre, la dirección de origen (por defecto Carrer dels Argenters 2, Cerdanyola del Vallès) y la tarifa €/km → **Clientes**: da de alta los clientes (los km se calculan solos).
+
+## Cómo se registra un gasto
+
+1. **Nuevo gasto** → *Hacer foto del ticket* (abre la cámara) o *Elegir imagen o PDF*.
+2. La foto se reduce a 1600 px en el móvil y se sube a Supabase Storage (carpeta privada del usuario). De los PDF se guarda el original y una imagen de la 1.ª página para el Word.
+3. El servidor se la manda a Claude, que devuelve fecha, comercio, total con IVA, CIF/NIF y tipo de gasto.
+4. Revisas el formulario pre-rellenado y lo guardas. **Nada se guarda sin confirmar.**
+   - Al elegir el cliente se rellenan Lloc y el último proyecto usado con él.
+   - Si el cliente tiene km, puedes añadir el desplazamiento de ese día en el mismo paso (no se duplica si ya existe).
+   - La fecha tiene que caer en el mes en el que estás; si el ticket es de otro mes, la app te ofrece guardarlo allí.
+5. *Solo kilometraje*: para días sin ticket. Los km salen del cliente y se pueden cambiar; importe = km × €/km.
 
 ## Desarrollo
 
@@ -68,7 +84,7 @@ Requiere Docker para el Supabase local.
 ```bash
 npm install
 npx supabase start            # Supabase local (aplica las migraciones)
-cp .env.example .env.local    # pon la URL y la anon key que muestra el comando anterior
+cp .env.example .env.local    # pon la URL y la clave publishable que muestra el comando anterior
 npm run dev                   # http://localhost:3000
 npm test                      # tests de lógica
 npm run typecheck && npm run lint

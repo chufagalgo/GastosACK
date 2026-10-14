@@ -40,3 +40,23 @@ export function monthLabel(year: number, month: number): string {
 export function formatDay(d: Date): string {
   return d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 }
+
+/** Hoy en España como "YYYY-MM-DD" (el servidor puede estar en UTC). */
+export function todayInSpain(now = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
+}
+
+/** ¿La fecha "YYYY-MM-DD" cae en ese mes? */
+export function isInMonth(date: string, year: number, month: number): boolean {
+  return date.startsWith(`${monthKey(year, month)}-`);
+}
+
+/** Días que tiene un mes (28–31). */
+export function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+/** "2026-03-02" → "lunes 2" */
+export function weekdayDay(date: string): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", timeZone: "UTC" });
+}
