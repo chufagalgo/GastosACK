@@ -24,8 +24,10 @@ export interface ExcelInput {
   timeControl: boolean;
 }
 
-function toExcel(v: CellValue): ExcelJS.CellValue {
-  return v == null || typeof v === "number" ? v : { formula: v.formula };
+// Cada fórmula se guarda con su resultado ya calculado: si no, Excel en "Vista protegida"
+// (ficheros descargados) y las vistas previas del móvil/correo muestran las celdas vacías.
+function toExcel(v: CellValue, result: number): ExcelJS.CellValue {
+  return v == null || typeof v === "number" ? v : { formula: v.formula, result };
 }
 
 export async function buildExcel(input: ExcelInput, templatePath = TEMPLATE_PATH): Promise<Buffer> {
@@ -50,13 +52,13 @@ export async function buildExcel(input: ExcelInput, templatePath = TEMPLATE_PATH
     ws.getCell(`B${r}`).value = d.client || null;
     ws.getCell(`C${r}`).value = d.project || null;
     ws.getCell(`D${r}`).value = d.place || null;
-    ws.getCell(`E${r}`).value = toExcel(d.km);
+    ws.getCell(`E${r}`).value = toExcel(d.km, d.kmSum);
     ws.getCell(`F${r}`).value = d.rate;
-    ws.getCell(`G${r}`).value = { formula: `F${r}*E${r}` };
-    for (const c of TICKET_CATEGORIES) ws.getCell(`${CATEGORY_COLUMN[c]}${r}`).value = toExcel(d.amounts[c]);
+    ws.getCell(`G${r}`).value = { formula: `F${r}*E${r}`, result: d.kmAmount };
+    for (const c of TICKET_CATEGORIES) ws.getCell(`${CATEGORY_COLUMN[c]}${r}`).value = toExcel(d.amounts[c], d.sums[c]);
     // La plantilla lleva un 0 en Autopistes en todos los días.
     if (ws.getCell(`H${r}`).value == null) ws.getCell(`H${r}`).value = 0;
-    ws.getCell(`M${r}`).value = { formula: `G${r}+H${r}+I${r}+J${r}+K${r}+L${r}` };
+    ws.getCell(`M${r}`).value = { formula: `G${r}+H${r}+I${r}+J${r}+K${r}+L${r}`, result: d.total };
   }
 
   // Cálculos sueltos del usuario en P8:Q13 (de cuando no tenía coche de empresa): fuera.
@@ -77,14 +79,16 @@ export async function buildExcel(input: ExcelInput, templatePath = TEMPLATE_PATH
 
   ws.getCell("M42").value = input.itmHours ? "si" : "no";
   ws.getCell("M43").value = input.timeControl ? "si" : "no";
-  ws.getCell("M44").value = { formula: "SUM(M9:M39)" };
-  ws.getCell("M45").value = { formula: "+B44+B45+B46+B47" };
-  ws.getCell("M46").value = { formula: "M44-M45" };
+  const monthTotal = [...rows.values()].reduce((a, d) => a + d.total, 0);
+  const advancesTotal = input.advances.reduce((a, x) => a + x.amount_cents, 0) / 100;
+  ws.getCell("M44").value = { formula: "SUM(M9:M39)", result: monthTotal };
+  ws.getCell("M45").value = { formula: "+B44+B45+B46+B47", result: advancesTotal };
+  ws.getCell("M46").value = { formula: "M44-M45", result: monthTotal - advancesTotal };
 
   // ExcelJS activaría la numeración de página propia; la plantilla no la usa.
   delete ws.pageSetup.firstPageNumber;
 
-  // Las fórmulas se guardan sin resultado: que Excel lo recalcule todo al abrir.
+  // Además, que Excel lo recalcule todo al abrir (cuando no está en Vista protegida).
   wb.calcProperties = { ...wb.calcProperties, fullCalcOnLoad: true };
   return Buffer.from(await wb.xlsx.writeBuffer());
 }

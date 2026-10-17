@@ -31,6 +31,11 @@ export interface DayRow {
   km: CellValue; // E
   rate: number; // F
   amounts: Record<TicketCategory, CellValue>; // H–L
+  // Valores numéricos, para guardar el resultado de cada fórmula en el fichero.
+  kmSum: number;
+  sums: Record<TicketCategory, number>;
+  kmAmount: number; // G = F × E
+  total: number; // M = G + H…L
 }
 
 /** Columna del Excel de cada categoría de ticket. */
@@ -45,6 +50,10 @@ export const CATEGORY_COLUMN: Record<TicketCategory, string> = {
 /** 12.82 → "12.82"; números con punto decimal, como los escribe Excel en una fórmula. */
 function num(n: number): string {
   return String(Math.round(n * 100) / 100);
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 /** Uno → el número; varios → fórmula "12.82+2+6.5" para que se vea el desglose; ninguno → null. */
@@ -70,9 +79,14 @@ export function buildDayRows(expenses: ExpenseForExcel[], year: number, month: n
     const date = `${prefix}${String(day).padStart(2, "0")}`;
     const items = expenses.filter((e) => e.date === date);
     const kmItems = items.filter((e) => e.category === "km" && e.km != null);
-    const amounts = Object.fromEntries(
-      TICKET_CATEGORIES.map((c) => [c, sumCell(items.filter((e) => e.category === c).map((e) => e.amount_cents / 100))]),
-    ) as Record<TicketCategory, CellValue>;
+    const values = Object.fromEntries(
+      TICKET_CATEGORIES.map((c) => [c, items.filter((e) => e.category === c).map((e) => e.amount_cents / 100)]),
+    ) as Record<TicketCategory, number[]>;
+    const amounts = Object.fromEntries(TICKET_CATEGORIES.map((c) => [c, sumCell(values[c])])) as Record<TicketCategory, CellValue>;
+    const sums = Object.fromEntries(TICKET_CATEGORIES.map((c) => [c, round2(values[c].reduce((a, b) => a + b, 0))])) as Record<TicketCategory, number>;
+    const kmSum = Math.round(kmItems.reduce((a, e) => a + e.km!, 0) * 10) / 10;
+    const rate = kmItems[0]?.km_rate ?? defaultRate;
+    const kmAmount = kmSum * rate;
     rows.push({
       day,
       row: 8 + day,
@@ -80,8 +94,12 @@ export function buildDayRows(expenses: ExpenseForExcel[], year: number, month: n
       project: joinDistinct(items.map((e) => e.project)),
       place: joinDistinct(items.map((e) => e.place)),
       km: sumCell(kmItems.map((e) => e.km!)),
-      rate: kmItems[0]?.km_rate ?? defaultRate,
+      rate,
       amounts,
+      kmSum,
+      sums,
+      kmAmount,
+      total: kmAmount + TICKET_CATEGORIES.reduce((a, c) => a + sums[c], 0),
     });
   }
   return rows;

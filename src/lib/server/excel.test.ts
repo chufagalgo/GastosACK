@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { ExpenseForExcel } from "@/lib/domain/excel-rows";
 import { buildExcel, TEMPLATE_PATH, type ExcelInput } from "./excel";
@@ -166,6 +167,36 @@ describe("Excel mensual", () => {
       expect(cell("M44")).toBeCloseTo(5.775, 9); // 52,5 km × 0,11
       expect(cell("M45")).toBe(60);
       expect(cell("M46")).toBeCloseTo(-54.225, 9);
+    }
+  }, 120_000);
+
+  it("cada fórmula lleva su resultado guardado (Vista protegida y vistas previas no recalculan)", async () => {
+    const xml = await (await JSZip.loadAsync(marchBuf)).file("xl/worksheets/sheet1.xml")!.async("string");
+    const formulaCells = [...xml.matchAll(/<c r="([A-Z]+\d+)"[^>]*>(.*?)<\/c>/g)].filter((m) => m[2].includes("<f>"));
+    expect(formulaCells.length).toBeGreaterThan(60);
+    const withoutValue = formulaCells.filter((m) => !/<v>[^<]+<\/v>/.test(m[2])).map((m) => m[1]);
+    expect(withoutValue).toEqual([]);
+
+    // Los resultados guardados son los mismos que daba la plantilla de marzo.
+    // (al releer, ExcelJS convierte un resultado 0 en undefined; en el fichero sí está "<v>0</v>")
+    const result = (addr: string) => (march.getCell(addr).value as { result?: number }).result ?? 0;
+    expect(result("I10")).toBeCloseTo(21.32, 9); // =12.82+2+6.5
+    expect(result("M10")).toBeCloseTo(27.678, 9);
+    expect(result("I38")).toBeCloseTo(25.45, 9); // =11.45+14
+    expect(result("M44")).toBeCloseTo(97.808, 9);
+    expect(result("M45")).toBe(0);
+    expect(result("M46")).toBeCloseTo(97.808, 9);
+  });
+
+  it.skipIf(!hasSoffice)("los resultados guardados coinciden con los que recalcula LibreOffice en todas las celdas", () => {
+    const rows = recalc(marchBuf);
+    for (let r = 9; r <= 46; r++) {
+      for (const col of "EGHIJKLM") {
+        const cell = march.getCell(`${col}${r}`);
+        if (!cell.formula) continue;
+        const lo = Number(rows[r - 1][col.charCodeAt(0) - 65]);
+        expect((cell.value as { result?: number }).result ?? 0, `${col}${r}`).toBeCloseTo(lo, 9);
+      }
     }
   }, 120_000);
 });
